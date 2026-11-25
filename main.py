@@ -27,6 +27,5 @@ def root() -> dict[str, str]:
 
 @app.post("/predict")
 def predict(data: PredictionRequest) -> dict[str, int]:
-    # The model expects a list of samples, so wrap the features in another list.
     prediction = model.predict([data.features])[0]
     return {"prediction": int(prediction)}
