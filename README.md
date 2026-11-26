@@ -112,3 +112,38 @@ The feature order matches `load_wine().feature_names`:
 
 The API accepts exactly 13 numbers. An incorrect number of features returns status code `422`.
 Check `GET /`, `POST /predict`, and `/docs` both locally and in Docker.
+
+## MLflow Setup (SIS-3)
+
+Install the dependencies from `requirements.txt` first. Run these PowerShell
+commands from the project directory.
+
+Create a directory for the local database and model artifacts:
+
+```powershell
+New-Item -ItemType Directory -Force .mlflow
+```
+
+Start the MLflow tracking server in a separate terminal:
+
+```powershell
+.\.venv\Scripts\python.exe -m mlflow server --backend-store-uri sqlite:///.mlflow/mlflow.db --artifacts-destination .mlflow/artifacts --host 127.0.0.1 --port 5000 --workers 1
+```
+
+Open the MLflow UI at http://127.0.0.1:5000.
+
+In another terminal, create or select the experiment:
+
+```powershell
+.\.venv\Scripts\python.exe -c "import mlflow; mlflow.set_tracking_uri('http://127.0.0.1:5000'); mlflow.set_experiment('wine-classification')"
+```
+
+The experiment starts empty. Training runs and registered models will be added
+in the next stages of SIS-3. This command can be run again to select the existing
+experiment.
+
+MLflow stores experiment metadata in `.mlflow/mlflow.db` and model artifacts
+in `.mlflow/artifacts`. The `.mlflow/` directory is excluded from Git and the
+Docker build context. Its data remains available after restarting the server.
+
+Press `Ctrl+C` in the server terminal to stop MLflow.
