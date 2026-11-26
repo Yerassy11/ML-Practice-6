@@ -1,6 +1,6 @@
 # Wine ML API
 
-An educational project for training a classification model and serving it with FastAPI and Docker.
+A project for training a classification model and serving it with FastAPI and Docker.
 The `RandomForestClassifier` model predicts a wine class (`0`, `1`, or `2`) from 13 numerical features.
 
 The project uses scikit-learn's built-in Wine dataset: 178 samples and 3 classes.
@@ -28,7 +28,8 @@ python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 ```
 
-Train the model and save it to `model.joblib`:
+Start the MLflow server as described in **MLflow Setup (SIS-3)** below.
+Then train the model and save it to `model.joblib`:
 
 ```powershell
 .\.venv\Scripts\python.exe train.py
@@ -138,9 +139,21 @@ In another terminal, create or select the experiment:
 .\.venv\Scripts\python.exe -c "import mlflow; mlflow.set_tracking_uri('http://127.0.0.1:5000'); mlflow.set_experiment('wine-classification')"
 ```
 
-The experiment starts empty. Training runs and registered models will be added
-in the next stages of SIS-3. This command can be run again to select the existing
-experiment.
+This command can be run again to select the existing experiment.
+
+With the MLflow server running, start training:
+
+```powershell
+.\.venv\Scripts\python.exe train.py
+```
+
+Each training run logs `n_estimators`, `random_state`, and `test_size`, along
+with test `accuracy` and `f1_macro`. It saves `model.joblib` as a run artifact
+and logs the same classifier in MLflow model format with an input example.
+
+Open the `wine-classification` experiment and select the latest
+`random-forest` run to inspect its parameters, metrics, artifacts, and model.
+Model registration will be added in the next stage of SIS-3.
 
 MLflow stores experiment metadata in `.mlflow/mlflow.db` and model artifacts
 in `.mlflow/artifacts`. The `.mlflow/` directory is excluded from Git and the
