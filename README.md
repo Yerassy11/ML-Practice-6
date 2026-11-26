@@ -153,7 +153,25 @@ and logs the same classifier in MLflow model format with an input example.
 
 Open the `wine-classification` experiment and select the latest
 `random-forest` run to inspect its parameters, metrics, artifacts, and model.
-Model registration will be added in the next stage of SIS-3.
+Each training run also registers its model under the name `wine-classifier`.
+The first registration creates version `1`; each subsequent registration
+creates a new version under the same name. The script prints the version number.
+
+In the MLflow UI, open **Models**, select `wine-classifier`, then open a version
+to inspect its source run and model artifacts.
+
+To load a specific registered version in Python:
+
+```python
+import mlflow
+import mlflow.sklearn
+
+mlflow.set_tracking_uri("http://127.0.0.1:5000")
+model = mlflow.sklearn.load_model("models:/wine-classifier/1")
+```
+
+FastAPI continues to load `model.joblib`, saved from the same trained classifier.
+The Registry stores versioned copies for tracking and reuse.
 
 MLflow stores experiment metadata in `.mlflow/mlflow.db` and model artifacts
 in `.mlflow/artifacts`. The `.mlflow/` directory is excluded from Git and the

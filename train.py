@@ -46,17 +46,22 @@ def main() -> None:
         joblib.dump(model, MODEL_PATH)
         mlflow.log_artifact(str(MODEL_PATH))
 
-        mlflow.sklearn.log_model(
+        model_info = mlflow.sklearn.log_model(
             model,
             name="model",
             input_example=x_test[:1],
             skops_trusted_types=["sklearn.tree._tree.Tree"],
         )
 
+        registered_model = mlflow.register_model(
+            model_info.model_uri, "wine-classifier"
+        )
+
         print(f"Test accuracy: {metrics['accuracy']:.3f}")
         print(f"Test F1 (macro): {metrics['f1_macro']:.3f}")
         print(f"Saved model to {MODEL_PATH}")
         print(f"MLflow run ID: {run.info.run_id}")
+        print(f"Registered model: {registered_model.name}, version: {registered_model.version}")
 
 
 if __name__ == "__main__":
