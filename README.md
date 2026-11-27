@@ -11,6 +11,7 @@ No separate dataset download is needed. The data is split into 80% for training 
 - `train.py` — trains, evaluates, and saves the model.
 - `model.joblib` — the saved model.
 - `main.py` — the API with `GET /` and `POST /predict` endpoints.
+- `frontend.py` — a Streamlit form that sends prediction requests to the API.
 - `requirements.txt` — Python dependencies.
 - `Dockerfile` — instructions for building the image and running the container.
 - `.dockerignore` — files excluded from the Docker build context.
@@ -178,3 +179,34 @@ in `.mlflow/artifacts`. The `.mlflow/` directory is excluded from Git and the
 Docker build context. Its data remains available after restarting the server.
 
 Press `Ctrl+C` in the server terminal to stop MLflow.
+
+## Streamlit Frontend (SIS-3)
+
+The frontend provides 13 named numerical inputs, a **Predict** button, and the
+predicted wine class. The fields contain a sample that can be submitted as-is.
+It sends requests to FastAPI; predictions are computed by the API's saved model.
+
+With dependencies installed and `model.joblib` present, start FastAPI in one
+PowerShell terminal from the project directory:
+
+```powershell
+.\.venv\Scripts\python.exe -m uvicorn main:app --reload
+```
+
+Start Streamlit in another terminal:
+
+```powershell
+$env:API_URL = "http://127.0.0.1:8000"
+.\.venv\Scripts\python.exe -m streamlit run frontend.py
+```
+
+Open http://localhost:8501 and click **Predict**. The default example should
+return class `0`. Changing the measurements and submitting the form sends a
+new request. Class numbers are category labels, not quality ratings.
+
+If FastAPI is running in Docker with the `8001:8000` port mapping, set
+`$env:API_URL = "http://127.0.0.1:8001"` before starting Streamlit instead.
+
+MLflow is needed for training and registration, but is not required to serve
+predictions from the saved `model.joblib`. If the API is unavailable, the form
+displays an error message. Stop each service with `Ctrl+C` in its terminal.
