@@ -153,7 +153,7 @@ with test `accuracy` and `f1_macro`. It saves `model.joblib` as a run artifact
 and logs the same classifier in MLflow model format with an input example.
 
 Open the `wine-classification` experiment and select the latest
-`random-forest` run to inspect its parameters, metrics, artifacts, and model.
+training run to inspect its parameters, metrics, artifacts, and model.
 Each training run also registers its model under the name `wine-classifier`.
 The first registration creates version `1`; each subsequent registration
 creates a new version under the same name. The script prints the version number.
@@ -210,3 +210,41 @@ If FastAPI is running in Docker with the `8001:8000` port mapping, set
 MLflow is needed for training and registration, but is not required to serve
 predictions from the saved `model.joblib`. If the API is unavailable, the form
 displays an error message. Stop each service with `Ctrl+C` in its terminal.
+
+## Experiment Comparison (SIS-3)
+
+The `wine-classification` experiment contains training runs with 100 and 200
+trees. Both use `random_state=42`, `test_size=0.2`, and stratification by class,
+so they are evaluated on the same 36 test samples.
+
+| Trees | Accuracy | F1 macro | Registered version |
+| --- | --- | --- | --- |
+| 100 | 1.000 | 1.000 | 1 |
+| 200 | 1.000 | 1.000 | 2 |
+
+Recorded runs:
+
+- 100 trees: `a7784c6bd2944ae78ba7514da38457f1`
+- 200 trees: `79cc442186ba4130b6ff77a75fbcd2bc`
+
+Both versions were loaded from the Registry and their test metrics were
+recomputed to verify the logged results. Increasing the tree count did not
+improve these metrics on this test split. The original 100-tree `model.joblib`
+was retained for serving; the 200-tree model remains available as version 2
+in the Registry. Perfect scores on this small test set do not guarantee perfect
+performance on new data.
+
+To repeat the comparison, start MLflow, then run:
+
+```powershell
+.\.venv\Scripts\python.exe train.py --n-estimators 100
+.\.venv\Scripts\python.exe train.py --n-estimators 200
+```
+
+Each command creates a new run and registered version, and overwrites the
+local `model.joblib`. Running without `--n-estimators` uses 100 trees.
+The recorded IDs and version numbers above refer to the original comparison.
+
+In MLflow, open `wine-classification`, select the two recorded runs, and use
+**Compare** to view their parameters and metrics side by side. Under **Models**,
+open `wine-classifier` to inspect versions 1 and 2 and their source runs.

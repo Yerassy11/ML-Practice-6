@@ -1,4 +1,5 @@
 
+import argparse
 from pathlib import Path
 
 import joblib
@@ -13,11 +14,11 @@ from sklearn.model_selection import train_test_split
 MODEL_PATH = Path(__file__).with_name("model.joblib")
 
 
-def main() -> None:
+def main(n_estimators: int = 100) -> None:
     mlflow.set_tracking_uri("http://127.0.0.1:5000")
     mlflow.set_experiment("wine-classification")
 
-    params = {"n_estimators": 100, "random_state": 42, "test_size": 0.2}
+    params = {"n_estimators": n_estimators, "random_state": 42, "test_size": 0.2}
     wine = load_wine()
     x_train, x_test, y_train, y_test = train_test_split(
         wine.data,
@@ -27,7 +28,7 @@ def main() -> None:
         stratify=wine.target,
     )
 
-    with mlflow.start_run(run_name="random-forest") as run:
+    with mlflow.start_run(run_name=f"random-forest-{n_estimators}-trees") as run:
         mlflow.log_params(params)
 
         model = RandomForestClassifier(
@@ -65,4 +66,9 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="Train and track the Wine classifier.")
+    parser.add_argument("--n-estimators", type=int, default=100, help="Number of trees (default: 100)")
+    args = parser.parse_args()
+    if args.n_estimators < 1:
+        parser.error("--n-estimators must be a positive integer")
+    main(args.n_estimators)
